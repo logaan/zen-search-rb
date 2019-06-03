@@ -3,10 +3,14 @@ require 'json'
 require 'yaml'
 require 'colorize'
 
+def parse_dataset(name)
+  JSON.parse(File.read(File.join('data', name)))
+end
+
 DATA = {
-  "users" => JSON.parse(File.read('data/users.json')),
-  "tickets" => JSON.parse(File.read('data/tickets.json')),
-  "organizations" => JSON.parse(File.read('data/organizations.json'))
+  "users" => parse_dataset('users.json')
+  "tickets" => parse_dataset('tickets.json')
+  "organizations" => parse_dataset('organizations.json')
 }
 
 FIELDS = DATA.flat_map do |dataset, rows|
