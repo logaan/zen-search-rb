@@ -8,8 +8,8 @@ def parse_dataset(name)
 end
 
 DATA = {
-  "users" => parse_dataset('users.json')
-  "tickets" => parse_dataset('tickets.json')
+  "users" => parse_dataset('users.json'),
+  "tickets" => parse_dataset('tickets.json'),
   "organizations" => parse_dataset('organizations.json')
 }
 
