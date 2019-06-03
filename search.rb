@@ -26,11 +26,11 @@ end
 
 def search_with_input(line)
   dataset, field, value = line.split(/[\.\=]/)
-  search(dataset, field, JSON.load("[" + value + "]").first)
+  search(dataset, field, JSON.parse(value, quirks_mode: true))
 end
 
 def main
-  puts 'Seach like `users.name="foo"`'.yellow
+  puts 'Seach like `users.name="Francisca Rasmussen"`'.yellow
 
   while line = Readline.readline('search> '.green, true)
     break if line == 'exit'
