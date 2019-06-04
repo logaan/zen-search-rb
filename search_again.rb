@@ -1,3 +1,4 @@
+require 'readline'
 require 'json'
 require 'yaml'
 require 'colorize'
@@ -12,6 +13,10 @@ module States
       'Which file would you like to search?'
     end
 
+    def options
+      @data.keys.sort
+    end
+
     def tick(file)
       if valid?(file)
         Results::Silent.new(Field.new(@data, file))
@@ -23,7 +28,7 @@ module States
     private
 
     def valid?(file)
-      @data.keys.include?(file)
+      options.include?(file)
     end
   end
 
@@ -37,6 +42,10 @@ module States
       'Which field should we look in?'
     end
 
+    def options
+      @data[@file].first.keys.sort
+    end
+
     def tick(field)
       if valid?(field)
         Results::Silent.new(Value.new(@data, @file, field))
@@ -48,7 +57,7 @@ module States
     private
 
     def valid?(field)
-      @data[@file].first.keys.include?(field)
+      options.include?(field)
     end
   end
 
@@ -63,8 +72,14 @@ module States
       "What's the value you'd like?"
     end
 
+    def options
+      # TODO: to_json on the field could happen on load
+      @data[@file].map{ |row| row[@field].to_json }.uniq.sort
+    end
+
     def tick(value)
-      results = search(@file, @field, value)
+      results = search(value)
+
       unless results.empty?
         Results::WithOutput.new(File.new(@data), YAML.dump(results))
       else
@@ -74,9 +89,10 @@ module States
 
     private
 
-    def search(file, field, value)
+    # TODO: handle JSON parse error
+    def search(value)
       parsed_value = JSON.parse(value, quirks_mode: true)
-      @data[file].find_all { |row| row[field] == parsed_value }
+      @data[@file].find_all { |row| row[@field] == parsed_value }
     end
   end
 end
@@ -114,10 +130,17 @@ class Runner
 
     while true
       puts state.prompt.green
-      input = gets.strip
+
+      Readline.completion_proc = proc do |string_so_far|
+        state.options.grep(/^#{Regexp.escape(string_so_far)}/)
+      end
+      input = Readline.readline('> '.green, true).strip
+
       break if input == "exit"
+
       result = state.tick(input)
       puts result.output.yellow if result.output
+
       state = result.state
     end
   end
