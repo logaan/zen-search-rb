@@ -13,7 +13,17 @@ module States
     end
 
     def tick(file)
-      Results::Silent.new(Field.new(@data, file))
+      if valid?(file)
+        Results::Silent.new(Field.new(@data, file))
+      else
+        Results::WithOutput.new(File.new(@data), "File not found.")
+      end
+    end
+
+    private
+
+    def valid?(file)
+      @data.keys.include?(file)
     end
   end
 
@@ -28,7 +38,17 @@ module States
     end
 
     def tick(field)
-      Results::Silent.new(Value.new(@data, @file, field))
+      if valid?(field)
+        Results::Silent.new(Value.new(@data, @file, field))
+      else
+        Results::WithOutput.new(Field.new(@data, @file), "Field not found.")
+      end
+    end
+
+    private
+
+    def valid?(field)
+      @data[@file].first.keys.include?(field)
     end
   end
 
@@ -44,8 +64,12 @@ module States
     end
 
     def tick(value)
-      output = YAML.dump(search(@file, @field, value))
-      Results::WithOutput.new(File.new(@data), output)
+      results = search(@file, @field, value)
+      unless results.empty?
+        Results::WithOutput.new(File.new(@data), YAML.dump(results))
+      else
+        Results::WithOutput.new(File.new(@data), "No results found.")
+      end
     end
 
     private
