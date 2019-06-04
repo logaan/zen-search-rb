@@ -21,7 +21,7 @@ module States
       if valid?(file)
         Results::Silent.new(Field.new(@data, file))
       else
-        Results::WithOutput.new(File.new(@data), "File not found.")
+        Results::WithOutput.new(self, "File not found.")
       end
     end
 
@@ -50,7 +50,7 @@ module States
       if valid?(field)
         Results::Silent.new(Value.new(@data, @file, field))
       else
-        Results::WithOutput.new(Field.new(@data, @file), "Field not found.")
+        Results::WithOutput.new(self, "Field not found.")
       end
     end
 
@@ -73,7 +73,6 @@ module States
     end
 
     def options
-      # TODO: to_json on the field could happen on load
       @data[@file].map{ |row| row[@field].to_json }.uniq.sort
     end
 
@@ -85,11 +84,12 @@ module States
       else
         Results::WithOutput.new(File.new(@data), "No results found.")
       end
+    rescue JSON::ParserError
+      Results::WithOutput.new(self, "Please search with JSON values.")
     end
 
     private
 
-    # TODO: handle JSON parse error
     def search(value)
       parsed_value = JSON.parse(value, quirks_mode: true)
       @data[@file].find_all { |row| row[@field] == parsed_value }
@@ -152,6 +152,5 @@ class Runner
     Readline.readline('> '.green, true)
   end
 end
-
 
 Runner.new().run
