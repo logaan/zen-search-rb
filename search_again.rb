@@ -123,25 +123,18 @@ class Runner
       "tickets" => parse_dataset('tickets.json'),
       "organizations" => parse_dataset('organizations.json')
     }
+
+    @state = States::File.new(@data)
   end
 
   def run
-    state = States::File.new(@data)
-
     while true
-      puts state.prompt.green
-
-      Readline.completion_proc = proc do |string_so_far|
-        state.options.grep(/^#{Regexp.escape(string_so_far)}/)
-      end
-      input = Readline.readline('> '.green, true).strip
-
-      break if input == "exit"
-
-      result = state.tick(input)
+      puts @state.prompt.green
+      input = get_input
+      break if input.nil? or input.strip == "exit"
+      result = @state.tick(input.strip)
       puts result.output.yellow if result.output
-
-      state = result.state
+      @state = result.state
     end
   end
 
@@ -149,6 +142,14 @@ class Runner
 
   def parse_dataset(name)
     JSON.parse(File.read(File.join('data', name)))
+  end
+
+  def get_input
+    Readline.completion_proc = proc do |string_so_far|
+      @state.options.grep(/^#{Regexp.escape(string_so_far)}/)
+    end
+
+    Readline.readline('> '.green, true)
   end
 end
 
