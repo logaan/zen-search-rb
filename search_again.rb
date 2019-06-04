@@ -141,7 +141,9 @@ class Runner
   private
 
   def parse_dataset(name)
-    JSON.parse(File.read(File.join('data', name)))
+    path = File.join('data', name)
+    file = File.read(path)
+    JSON.parse(file)
   end
 
   def get_input
